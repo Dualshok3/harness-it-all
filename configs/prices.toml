@@ -1,0 +1,12 @@
+# Preise für die Kostenrechnung. API-Preise in US-Dollar pro 1 Million Tokens.
+# Stand: Anthropic-Preisliste, zwischengespeichert am 2026-11-03. Vor einem Lauf, der Geld kostet, gegen die
+# aktuelle Preisliste prüfen: https://platform.claude.com/docs/en/about-claude/pricing
+
+[api."claude-opus-5-5"]
+input_usd_per_mtok = 4.00
+output_usd_per_mtok = 20.00
+
+# Lokale Modelle: keine API-Kosten, aber Strom. Grobe Schätzung aus Laufzeit × Leistungsaufnahme der GPU.
+[local]
+gpu_watts = 180.0             # RTX 5060 Ti unter Last, grob
+electricity_eur_per_kwh = 0.30
