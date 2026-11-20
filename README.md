@@ -55,7 +55,7 @@ git clone git@github.com:Dualshok3/harness-it-all.git && cd harness-it-all
 uv sync
 uv run pytest -q                       # ohne Netz, mit Fake-Modell und Mock-Transport
 uv run harness-it-all profiles         # Profile, Hashes und bekannte Unterschiede
-uv run harness-it-all ping openai --model run-…/candidate-0017   # lokale crit-Engine
+uv run harness-it-all ping openai --model <modell-id>   # lokale crit-Engine
 uv run harness-it-all ping anthropic   # ein echter API-Aufruf an Claude Opus 5.5 (kostet Geld)
 ```
 
@@ -70,7 +70,7 @@ from harness_it_all.report import compare, markdown, summarize
 from harness_it_all.scoring import score_records
 
 profile = load_profiles()["minimal"]
-gemma = OpenAICompatModel("run-20261109T095346Z-1b210ccf/candidate-0017")
+gemma = OpenAICompatModel(GEMMA_ID)       # die ID, unter der `crit serve` das Modell anbietet
 opus = AnthropicModel("claude-opus-5-5")
 rec = Recorder("runs/decisions.jsonl")
 
@@ -84,10 +84,11 @@ summary = summarize(scored, block_of=lambda r: r.tags["week"])
 print(markdown(summary))
 ```
 
-## Stand
+## Entwicklung
 
-Erste Version: Profile, beide Adapter, Recorder mit Replay, Scorer-Schnittstelle, gepaarter Block-Bootstrap und
-Markdown-Report, 18 Tests ohne Netz. Gegen eine laufende Engine bzw. die echte API ist sie noch nicht geprüft.
+```bash
+uv run pytest -q          # alle Tests laufen ohne Netz (Fake-Modell, Mock-Transport)
+uv run ruff check .       # Lint
+```
 
-Geplant: Self-Consistency (N Antworten parallel, Abstimmung) als eigener Baustein, HTML-Report, Anbindung an
-trade-hub (Meilenstein 3/4) und an die Evals von localRAG.
+Die CI führt bei jedem Push Lint, Tests und einen Secret-Scan (gitleaks) aus.
