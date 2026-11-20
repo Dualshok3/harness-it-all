@@ -15,7 +15,8 @@ from pathlib import Path
 from harness_it_all.canon import short_hash
 
 DEFAULT_PROFILES = Path(__file__).resolve().parents[2] / "configs" / "profiles.toml"
-BACKENDS = ("openai", "anthropic")
+BACKENDS = ("openai", "anthropic", "claude_code", "deepseek")
+CLI_EFFORTS = ("low", "medium", "high", "max")  # claude -p --effort kennt kein xhigh
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
 
 
@@ -52,6 +53,12 @@ def _validate(p: Profile) -> None:
                 f"{p.name}: {sorted(bad)} gibt es für Claude Opus 5.5 nicht (Thinking ist immer an, "
                 "Sampling wird abgelehnt). Gesteuert wird nur über effort."
             )
+    c = p.backends.get("claude_code", {})
+    if c and c.get("effort") not in CLI_EFFORTS:
+        raise ProfileError(f"{p.name}: claude_code.effort muss eines von {CLI_EFFORTS} sein")
+    bad = {"enable_thinking", "seed", "top_k"} & set(p.backends.get("deepseek", {}))
+    if bad:
+        raise ProfileError(f"{p.name}: {sorted(bad)} versteht die DeepSeek-API nicht")
     o = p.backends.get("openai", {})
     if o and "enable_thinking" in o and not isinstance(o["enable_thinking"], bool):
         raise ProfileError(f"{p.name}: openai.enable_thinking muss true oder false sein")

@@ -36,8 +36,9 @@ solche Antworten aus Score und Vergleich heraus.
 src/harness_it_all/
 ├── profiles.py        # feste Profile je Backend, Hash, Prüfung (z. B. keine Temperatur für Opus 5.5)
 ├── models/
-│   ├── openai_compat.py   # crit serve und andere OpenAI-kompatible Server (httpx)
+│   ├── openai_compat.py   # crit serve und andere OpenAI-kompatible Server, z. B. DeepSeek (httpx)
 │   ├── anthropic_model.py # Claude über das offizielle anthropic-SDK, effort + JSON-Schema + Fallbacks
+│   ├── claude_code.py     # Claude über die Claude-Code-CLI (`claude -p`): Abo statt API-Key
 │   └── fake.py            # deterministisch, für Tests
 ├── recorder.py        # aufzeichnen, ausführen, Replay
 ├── scoring.py         # Scorer-Schnittstelle + zwei Beispiel-Scorer
@@ -45,6 +46,18 @@ src/harness_it_all/
 ├── report.py          # Markdown-Report mit Konfidenzintervallen, Kosten, Strom
 └── prices.py          # API-Preise, Stromschätzung für die lokale GPU
 ```
+
+## Backends
+
+| Backend | Adapter | Zugang | Strukturierte Ausgabe |
+|---|---|---|---|
+| `openai` | `OpenAICompatModel` | lokale crit-Engine, kein Key | JSON-Schema erzwungen (crit-Subset) |
+| `anthropic` | `AnthropicModel` | `ANTHROPIC_API_KEY` | JSON-Schema erzwungen |
+| `claude_code` | `ClaudeCodeModel` | angemeldete Claude-Code-CLI (Abo) | `--json-schema` |
+| `deepseek` | `OpenAICompatModel(profile_key="deepseek", schema_mode="json_object")` | `DEEPSEEK_API_KEY` | nur gültiges JSON, Schema im System-Prompt |
+
+Jedes Backend hat im Profil einen eigenen Abschnitt. Was sich nicht angleichen lässt, steht dort unter
+`asymmetries`.
 
 ## Quickstart
 
@@ -70,16 +83,23 @@ from harness_it_all.report import compare, markdown, summarize
 from harness_it_all.scoring import score_records
 
 profile = load_profiles()["minimal"]
-gemma = OpenAICompatModel(GEMMA_ID)       # die ID, unter der `crit serve` das Modell anbietet
+gemma = OpenAICompatModel(GEMMA_ID)  # die ID, unter der `crit serve` das Modell anbietet
 opus = AnthropicModel("claude-opus-5-5")
 rec = Recorder("runs/decisions.jsonl")
 
 for case in cases:  # z. B. ein eingefrorener Marktzustand je Takt
     for model in (gemma, opus):
-        rec.run(model, profile, case.id, case.messages, schema=DECISION_SCHEMA,
-                prompt_version="decide-v3", tags={"snapshot": case.snapshot_hash, "week": case.week})
+        rec.run(
+            model,
+            profile,
+            case.id,
+            case.messages,
+            schema=DECISION_SCHEMA,
+            prompt_version="decide-v3",
+            tags={"snapshot": case.snapshot_hash, "week": case.week},
+        )
 
-scored = score_records(rec.read(), forward_score)        # Scorer kommt aus dem Projekt
+scored = score_records(rec.read(), forward_score)  # Scorer kommt aus dem Projekt
 summary = summarize(scored, block_of=lambda r: r.tags["week"])
 print(markdown(summary))
 ```
