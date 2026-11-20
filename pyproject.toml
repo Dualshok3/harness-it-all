@@ -1,7 +1,7 @@
 [project]
 name = "harness-it-all"
-version = "0.1.0"
-description = "Faire Vergleiche von LLM-Agenten: lokales Modell (crit) gegen Claude, mit festen Profilen, Aufzeichnung, Replay und Block-Bootstrap"
+version = "0.2.0"
+description = "Fair comparisons of LLM agents: local model (crit) vs. Claude, with fixed profiles, recording, replay and block bootstrap"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.12,<3.13"
